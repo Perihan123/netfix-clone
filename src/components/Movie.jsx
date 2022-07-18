@@ -1,9 +1,33 @@
+import { async } from "@firebase/util";
+import { arrayUnion, updateDoc,doc } from "firebase/firestore";
 import React, { useEffect, useState } from "react";
 
 import { FaHeart } from "react-icons/fa";
 import {FaRegHeart} from "react-icons/fa"
+import { UserAuth } from "../context/AuthContext";
+import { db } from '../firebase';
 const Movie = ({item}) => {
     const [like, setLike] = useState(false);
+    const[save,setSaved]=useState(false)
+    const{user}=UserAuth();
+
+    const movieID=doc(db,'users',`${user?.email}`);
+   //kullanicinin beğendiği filmleri veritabanına kaydeder
+    const saveShow =async()=>{
+      if(user?.email){
+        setLike(!like)
+        setSaved(true)
+        await updateDoc(movieID,{
+          saveShow:arrayUnion({
+            id:item.id,
+            title:item.title,
+            img:item.backdrop_path
+          })
+        })
+      }else{
+        alert('Please log in to save a movie');
+      }
+    }
 
   return (
     <div className="w-[160px] sm:w-[200px] lg:w-[280px] inline-block cursor-pointer relative p-2">
@@ -16,7 +40,7 @@ const Movie = ({item}) => {
       <p className="whitespace-normal text-xs md:text-sm font-bold flex justify-center h-full text-center">
         {item.original_title}
       </p>
-      <p> 
+      <p onClick={saveShow}> 
         {like ?  <FaHeart className="absolute top-4 left-4 text-gray-300"/> :<FaRegHeart/>}
       </p>
     </div>
